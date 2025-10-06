@@ -111,33 +111,47 @@ const scrapeCurrentListing = () => {
       // Skip if no src
       if (!src) return;
 
-      // Only count images that look like Allegro product images
-      if (src.includes('allegroimg.com') || src.includes('allegrostatic')) {
-        // EXCLUDE: logos, icons, UI elements
-        const excludePatterns = [
-          '/logo',
-          '/icon',
-          '/brand',
-          '/payment',
-          '/delivery',
-          '/badge',
-          '/sprite',
-          'allegro-logo',
-          'smart-logo',
-          '/ui/',
-          '/flags/',
-          'seller-badge'
-        ];
+      // Only accept images from allegroimg.com/original (main product photos)
+      // EXCLUDE allegrostatic (logos, UI, related products)
+      if (!src.includes('allegroimg.com')) {
+        return; // Skip non-product images
+      }
 
-        // Check if URL contains excluded pattern
-        const isExcluded = excludePatterns.some(pattern =>
-          src.toLowerCase().includes(pattern.toLowerCase())
-        );
+      // EXCLUDE: logos, icons, UI elements, related products
+      const excludePatterns = [
+        '/logo',
+        '/icon',
+        '/brand',
+        '/payment',
+        '/delivery',
+        '/badge',
+        '/sprite',
+        'allegro-logo',
+        'smart-logo',
+        '/ui/',
+        '/flags/',
+        'seller-badge',
+        'seller-extras', // Related products (160x160)
+        'statics/', // Static UI elements
+        'action-common' // UI icons
+      ];
 
-        if (isExcluded) {
-          console.log(`⚠️ Excluded image: ${src.substring(0, 80)}...`);
-          return;
-        }
+      // Check if URL contains excluded pattern
+      const isExcluded = excludePatterns.some(pattern =>
+        src.toLowerCase().includes(pattern.toLowerCase())
+      );
+
+      if (isExcluded) {
+        console.log(`⚠️ Excluded image: ${src.substring(0, 80)}...`);
+        return;
+      }
+
+      // REQUIRE alt attribute for product images
+      const alt = img.alt || '';
+      if (!alt || alt.length < 10) {
+        console.log(`⚠️ No alt text (likely UI): ${src.substring(0, 60)}...`);
+        return;
+      }
 
         // FILTER by image size (width/height)
         // Product images are usually at least 200x200px
