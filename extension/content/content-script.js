@@ -153,22 +153,21 @@ const scrapeCurrentListing = () => {
         return;
       }
 
-        // FILTER by image size (width/height)
-        // Product images are usually at least 200x200px
-        if (img.naturalWidth > 0 && img.naturalHeight > 0) {
-          if (img.naturalWidth < 200 || img.naturalHeight < 200) {
-            console.log(`⚠️ Image too small (${img.naturalWidth}x${img.naturalHeight}): ${src.substring(0, 60)}...`);
-            return;
-          }
+      // FILTER by image size (width/height)
+      // Product images are usually at least 200x200px
+      if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+        if (img.naturalWidth < 200 || img.naturalHeight < 200) {
+          console.log(`⚠️ Image too small (${img.naturalWidth}x${img.naturalHeight}): ${src.substring(0, 60)}...`);
+          return;
         }
+      }
 
-        // Extract base URL without size parameters
-        const baseUrl = src.split('?')[0].replace(/_(original|large|medium|small|thumb)\.(jpg|png|webp)/i, '');
+      // Extract base URL without size parameters
+      const baseUrl = src.split('?')[0].replace(/_(original|large|medium|small|thumb)\.(jpg|png|webp)/i, '');
 
-        if (!uniqueUrls.has(baseUrl)) {
-          uniqueUrls.add(baseUrl);
-          validImages.push({ src, width: img.naturalWidth, height: img.naturalHeight });
-        }
+      if (!uniqueUrls.has(baseUrl)) {
+        uniqueUrls.add(baseUrl);
+        validImages.push({ src, width: img.naturalWidth, height: img.naturalHeight });
       }
     });
 
