@@ -11,7 +11,8 @@
   },
   "scripts": {
     "start": "echo \"Extension loaded. Open chrome://extensions/\"",
-    "test": "echo \"No tests yet\"",
+    "test": "node scripts/test-auctions.js",
+    "test:auctions": "node scripts/test-auctions.js",
     "build": "echo \"No build process yet - load extension directly\"",
     "generate-icons": "node scripts/generate-icons.js"
   },
@@ -32,6 +33,7 @@
   },
   "homepage": "https://github.com/DamianMazurek/allegro-analyzer#readme",
   "devDependencies": {
+    "puppeteer": "^24.23.0",
     "sharp": "^0.34.4"
   }
 }

@@ -74,10 +74,15 @@ const scrapeCurrentListing = () => {
   let imageCount = 0;
   const imageSelectors = [
     'div[data-box-name="gallery"] img',
+    'div[data-box-name="Gallery"] img',
     'div.mpof_ki_gallery img',
     'div._9a071_1TeXP img',
     '[data-role="gallery-image"]',
-    'div.gallery img'
+    'div.gallery img',
+    'img[alt*="Zdjęcie"]',
+    'picture img',
+    'figure img',
+    '[data-testid="gallery"] img'
   ];
 
   for (const selector of imageSelectors) {
@@ -123,14 +128,23 @@ const scrapeCurrentListing = () => {
     '[data-box-name="Seller"] a',
     'div.mpof_ki_seller a',
     'a[data-role="seller-link"]',
-    'div.seller-info a'
+    'div.seller-info a',
+    'a[href*="/uzytkownik/"]',
+    'div[data-box-name="seller info"] a',
+    'section[aria-label*="Sprzedawca"] a',
+    'div:has(> a[href*="/uzytkownik/"]) a'
   ]);
 
   // Get condition (nowy/używany)
   const condition = trySelectors([
     '[data-box-name="Parameters"] [data-role="condition"]',
     'div.mpof_or_parameters dd',
-    '[itemprop="itemCondition"]'
+    '[itemprop="itemCondition"]',
+    'dd:has-text("Nowy")',
+    'dd:has-text("Używany")',
+    'div:contains("Stan:") + div',
+    'span:contains("Nowy")',
+    'span:contains("Używany")'
   ]);
 
   // Compile all data
