@@ -2,7 +2,7 @@
 let currentAuctionData = null;
 let currentTabUrl = null;
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   console.log('Allegro Analyzer popup loaded');
 
   // Get DOM elements
@@ -24,10 +24,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Listen for messages from content script
+  // Request latest data from background script
+  console.log('📤 Requesting latest data from background...');
+  chrome.runtime.sendMessage({ type: 'GET_LATEST_DATA' }, (response) => {
+    if (response && response.success && response.data) {
+      console.log('✅ Received data from background:', response.data);
+      currentAuctionData = response.data;
+      displayAuctionData(response.data);
+    } else {
+      console.log('ℹ️ No data available yet. Click "Analizuj aukcję" button on the page.');
+    }
+  });
+
+  // Listen for messages from background (live updates)
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message.type === 'AUCTION_DATA') {
-      console.log('Received auction data:', message.data);
+    if (message.type === 'AUCTION_DATA_UPDATED') {
+      console.log('🔄 Received updated auction data:', message.data);
       currentAuctionData = message.data;
       displayAuctionData(message.data);
     }

@@ -70,39 +70,77 @@ const scrapeCurrentListing = () => {
     'meta[itemprop="priceCurrency"]'
   ], 'content') || 'PLN';
 
-  // Count images (gallery thumbnails)
+  // Count images (gallery thumbnails) - more precise
   let imageCount = 0;
-  const imageSelectors = [
-    'div[data-box-name="gallery"] img',
-    'div[data-box-name="Gallery"] img',
-    'div.mpof_ki_gallery img',
-    'div._9a071_1TeXP img',
-    '[data-role="gallery-image"]',
-    'div.gallery img',
-    'img[alt*="Zdjęcie"]',
-    'picture img',
-    'figure img',
-    '[data-testid="gallery"] img'
+  const imageUrls = [];
+
+  // Try to find gallery container first
+  const galleryContainerSelectors = [
+    'div[data-box-name="gallery"]',
+    'div[data-box-name="Gallery"]',
+    'div[aria-label*="galeria"]',
+    'section[data-testid="gallery"]',
+    '[data-role="gallery-container"]'
   ];
 
-  for (const selector of imageSelectors) {
-    const images = document.querySelectorAll(selector);
-    if (images.length > 0) {
-      imageCount = images.length;
-      console.log(`✅ Found ${imageCount} images with selector: ${selector}`);
+  let galleryContainer = null;
+  for (const selector of galleryContainerSelectors) {
+    galleryContainer = document.querySelector(selector);
+    if (galleryContainer) {
+      console.log(`✅ Found gallery container with selector: ${selector}`);
       break;
     }
   }
 
-  // Get all image URLs
-  const imageUrls = [];
-  const galleryImages = document.querySelectorAll('div[data-box-name="gallery"] img, div.mpof_ki_gallery img, img[data-role="gallery-image"]');
-  galleryImages.forEach(img => {
-    const src = img.src || img.getAttribute('data-src') || img.getAttribute('data-lazy-src');
-    if (src && !imageUrls.includes(src)) {
-      imageUrls.push(src);
-    }
-  });
+  if (galleryContainer) {
+    // Count only images within gallery container
+    const images = galleryContainer.querySelectorAll('img');
+
+    // Filter out duplicates and tiny images (thumbnails vs full size)
+    const uniqueUrls = new Set();
+    images.forEach(img => {
+      let src = img.src || img.getAttribute('data-src') || img.getAttribute('data-lazy-src') || img.getAttribute('srcset');
+
+      // Clean srcset (take first URL)
+      if (src && src.includes(' ')) {
+        src = src.split(' ')[0];
+      }
+
+      // Only count images that look like Allegro product images
+      if (src && (src.includes('allegroimg.com') || src.includes('allegrostatic'))) {
+        // Extract base URL without size parameters
+        const baseUrl = src.split('?')[0].replace(/_(original|large|medium|small|thumb)\.(jpg|png|webp)/i, '');
+        uniqueUrls.add(baseUrl);
+
+        if (imageUrls.length < 5) {
+          imageUrls.push(src);
+        }
+      }
+    });
+
+    imageCount = uniqueUrls.size;
+    console.log(`✅ Found ${imageCount} unique product images in gallery`);
+  } else {
+    // Fallback: try to count images globally
+    console.log('⚠️ Gallery container not found, using fallback');
+    const allImages = document.querySelectorAll('img[src*="allegroimg.com"]');
+    const uniqueUrls = new Set();
+
+    allImages.forEach(img => {
+      const src = img.src;
+      if (src) {
+        const baseUrl = src.split('?')[0];
+        uniqueUrls.add(baseUrl);
+
+        if (imageUrls.length < 5) {
+          imageUrls.push(src);
+        }
+      }
+    });
+
+    imageCount = Math.min(uniqueUrls.size, 50); // Cap at 50 to avoid counting non-product images
+    console.log(`✅ Found ${imageCount} images (fallback method)`);
+  }
 
   // Get description length
   const descriptionSelectors = [
@@ -123,17 +161,34 @@ const scrapeCurrentListing = () => {
     }
   }
 
-  // Get seller info
-  const seller = trySelectors([
+  // Get seller info - try to extract just the name
+  let seller = trySelectors([
     '[data-box-name="Seller"] a',
     'div.mpof_ki_seller a',
     'a[data-role="seller-link"]',
     'div.seller-info a',
     'a[href*="/uzytkownik/"]',
     'div[data-box-name="seller info"] a',
-    'section[aria-label*="Sprzedawca"] a',
-    'div:has(> a[href*="/uzytkownik/"]) a'
+    'section[aria-label*="Sprzedawca"] a'
   ]);
+
+  // Clean seller name - remove "Inne przedmioty..." text
+  if (seller) {
+    // Try to extract from URL if text is too long
+    if (seller.length > 50 || seller.includes('Inne przedmioty')) {
+      const sellerLink = document.querySelector('a[href*="/uzytkownik/"]');
+      if (sellerLink) {
+        const match = sellerLink.href.match(/\/uzytkownik\/([^/?]+)/);
+        if (match) {
+          seller = decodeURIComponent(match[1].replace(/_/g, ' '));
+          console.log(`✅ Extracted seller from URL: ${seller}`);
+        }
+      }
+    }
+
+    // Remove common prefixes
+    seller = seller.replace(/^(od|from)\s+/i, '').trim();
+  }
 
   // Get condition (nowy/używany)
   const condition = trySelectors([
