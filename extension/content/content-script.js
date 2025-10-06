@@ -12,18 +12,164 @@ const getAuctionId = () => {
   return match ? match[1] : null;
 };
 
-// Scrape basic auction information
-const scrapeAuctionData = () => {
-  const data = {
-    url: window.location.href,
-    auctionId: getAuctionId(),
-    title: document.querySelector('h1')?.textContent?.trim() || 'Brak tytułu',
-    price: document.querySelector('[data-price]')?.textContent?.trim() || 'Brak ceny',
-    timestamp: new Date().toISOString()
+// Enhanced scraping function with multiple selector fallbacks
+const scrapeCurrentListing = () => {
+  console.log('🔍 Starting detailed scraping...');
+
+  // Helper function to try multiple selectors
+  const trySelectors = (selectors, attribute = 'textContent') => {
+    for (const selector of selectors) {
+      try {
+        const element = document.querySelector(selector);
+        if (element) {
+          const value = attribute === 'textContent'
+            ? element.textContent?.trim()
+            : element.getAttribute(attribute);
+          if (value) {
+            console.log(`✅ Found with selector: ${selector} = ${value.substring(0, 50)}...`);
+            return value;
+          }
+        }
+      } catch (e) {
+        // Continue to next selector
+      }
+    }
+    return null;
   };
 
-  console.log('📊 Scraped auction data:', data);
-  return data;
+  // Get auction title (multiple fallbacks)
+  const title = trySelectors([
+    'h1[itemprop="name"]',
+    'h1.msts_pt',
+    'h1._9a071_3ls6I',
+    'h1[data-role="title"]',
+    'h1',
+    '[data-box-name="Title"] h1',
+    'div[data-box-name="listing title"] h1'
+  ]);
+
+  // Get price (multiple fallbacks)
+  const price = trySelectors([
+    '[data-box-name="Price"] [data-price]',
+    'div[data-price]',
+    '[data-testid="price-container"] span',
+    'div._9a071_2gZHe span',
+    'span[itemprop="price"]',
+    'meta[itemprop="price"]',
+    'div.msts_pt_price',
+    '[data-role="price"]'
+  ]);
+
+  // Get price from meta tag if available
+  const priceAmount = trySelectors([
+    'meta[itemprop="price"]'
+  ], 'content');
+
+  // Get currency
+  const currency = trySelectors([
+    'meta[itemprop="priceCurrency"]'
+  ], 'content') || 'PLN';
+
+  // Count images (gallery thumbnails)
+  let imageCount = 0;
+  const imageSelectors = [
+    'div[data-box-name="gallery"] img',
+    'div.mpof_ki_gallery img',
+    'div._9a071_1TeXP img',
+    '[data-role="gallery-image"]',
+    'div.gallery img'
+  ];
+
+  for (const selector of imageSelectors) {
+    const images = document.querySelectorAll(selector);
+    if (images.length > 0) {
+      imageCount = images.length;
+      console.log(`✅ Found ${imageCount} images with selector: ${selector}`);
+      break;
+    }
+  }
+
+  // Get all image URLs
+  const imageUrls = [];
+  const galleryImages = document.querySelectorAll('div[data-box-name="gallery"] img, div.mpof_ki_gallery img, img[data-role="gallery-image"]');
+  galleryImages.forEach(img => {
+    const src = img.src || img.getAttribute('data-src') || img.getAttribute('data-lazy-src');
+    if (src && !imageUrls.includes(src)) {
+      imageUrls.push(src);
+    }
+  });
+
+  // Get description length
+  const descriptionSelectors = [
+    'div[data-box-name="Description"]',
+    'div.mpof_or',
+    'div._9a071_3Sn8X',
+    '[data-role="description"]',
+    'div.offer-description'
+  ];
+
+  let descriptionLength = 0;
+  for (const selector of descriptionSelectors) {
+    const desc = document.querySelector(selector);
+    if (desc) {
+      descriptionLength = desc.textContent?.trim().length || 0;
+      console.log(`✅ Found description (${descriptionLength} chars) with selector: ${selector}`);
+      break;
+    }
+  }
+
+  // Get seller info
+  const seller = trySelectors([
+    '[data-box-name="Seller"] a',
+    'div.mpof_ki_seller a',
+    'a[data-role="seller-link"]',
+    'div.seller-info a'
+  ]);
+
+  // Get condition (nowy/używany)
+  const condition = trySelectors([
+    '[data-box-name="Parameters"] [data-role="condition"]',
+    'div.mpof_or_parameters dd',
+    '[itemprop="itemCondition"]'
+  ]);
+
+  // Compile all data
+  const scrapedData = {
+    // Basic info
+    url: window.location.href,
+    auctionId: getAuctionId(),
+    title: title || 'Nie znaleziono tytułu',
+
+    // Price info
+    price: price || priceAmount || 'Nie znaleziono ceny',
+    priceAmount: priceAmount ? parseFloat(priceAmount) : null,
+    currency: currency,
+
+    // Images
+    imageCount: imageCount,
+    imageUrls: imageUrls.slice(0, 5), // First 5 images only
+
+    // Description
+    descriptionLength: descriptionLength,
+    hasDescription: descriptionLength > 0,
+
+    // Seller
+    seller: seller || 'Nie znaleziono sprzedawcy',
+
+    // Condition
+    condition: condition || 'Nie określono',
+
+    // Metadata
+    timestamp: new Date().toISOString(),
+    scrapedAt: new Date().toLocaleString('pl-PL')
+  };
+
+  return scrapedData;
+};
+
+// Legacy function for backward compatibility
+const scrapeAuctionData = () => {
+  return scrapeCurrentListing();
 };
 
 // Create floating analyze button
@@ -44,7 +190,25 @@ const createAnalyzeButton = () => {
     button.disabled = true;
 
     try {
-      const auctionData = scrapeAuctionData();
+      const auctionData = scrapeCurrentListing();
+
+      // Display scraped data in console as formatted JSON
+      console.log('\n' + '='.repeat(80));
+      console.log('📊 ALLEGRO ANALYZER - SCRAPED DATA');
+      console.log('='.repeat(80));
+      console.log(JSON.stringify(auctionData, null, 2));
+      console.log('='.repeat(80) + '\n');
+
+      // Also log as table for better readability
+      console.table({
+        'Tytuł': auctionData.title?.substring(0, 50) + '...',
+        'Cena': auctionData.price,
+        'Liczba zdjęć': auctionData.imageCount,
+        'Długość opisu': auctionData.descriptionLength,
+        'Sprzedawca': auctionData.seller,
+        'Stan': auctionData.condition,
+        'URL': auctionData.url
+      });
 
       // Send message to popup/background
       chrome.runtime.sendMessage({
@@ -62,7 +226,7 @@ const createAnalyzeButton = () => {
       }, 1500);
 
     } catch (error) {
-      console.error('Error analyzing auction:', error);
+      console.error('❌ Error analyzing auction:', error);
       button.innerHTML = '❌ Błąd';
       setTimeout(() => {
         button.innerHTML = '🔍 Analizuj aukcję';
@@ -84,8 +248,20 @@ const initialize = () => {
     // Create the analyze button
     createAnalyzeButton();
 
-    // Log basic auction info
-    scrapeAuctionData();
+    // Auto-scrape on page load (delayed to let page fully load)
+    setTimeout(() => {
+      console.log('\n🤖 Auto-scraping auction data on page load...');
+      const initialData = scrapeCurrentListing();
+
+      // Display initial scraped data
+      console.log('\n' + '='.repeat(80));
+      console.log('📊 INITIAL SCRAPE - AUCTION DATA');
+      console.log('='.repeat(80));
+      console.log(JSON.stringify(initialData, null, 2));
+      console.log('='.repeat(80) + '\n');
+
+      console.log('💡 Tip: Click the "🔍 Analizuj aukcję" button for fresh data!');
+    }, 2000);
   } else {
     console.log('❌ Not an Allegro auction page');
   }
