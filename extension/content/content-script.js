@@ -98,28 +98,72 @@ const scrapeCurrentListing = () => {
 
     // Filter out duplicates and tiny images (thumbnails vs full size)
     const uniqueUrls = new Set();
+    const validImages = [];
+
     images.forEach(img => {
       let src = img.src || img.getAttribute('data-src') || img.getAttribute('data-lazy-src') || img.getAttribute('srcset');
 
       // Clean srcset (take first URL)
       if (src && src.includes(' ')) {
-        src = src.split(' ')[0];
+        src = src.split(' ')[0].split(',')[0];
       }
 
+      // Skip if no src
+      if (!src) return;
+
       // Only count images that look like Allegro product images
-      if (src && (src.includes('allegroimg.com') || src.includes('allegrostatic'))) {
+      if (src.includes('allegroimg.com') || src.includes('allegrostatic')) {
+        // EXCLUDE: logos, icons, UI elements
+        const excludePatterns = [
+          '/logo',
+          '/icon',
+          '/brand',
+          '/payment',
+          '/delivery',
+          '/badge',
+          '/sprite',
+          'allegro-logo',
+          'smart-logo',
+          '/ui/',
+          '/flags/',
+          'seller-badge'
+        ];
+
+        // Check if URL contains excluded pattern
+        const isExcluded = excludePatterns.some(pattern =>
+          src.toLowerCase().includes(pattern.toLowerCase())
+        );
+
+        if (isExcluded) {
+          console.log(`⚠️ Excluded image: ${src.substring(0, 80)}...`);
+          return;
+        }
+
+        // FILTER by image size (width/height)
+        // Product images are usually at least 200x200px
+        if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+          if (img.naturalWidth < 200 || img.naturalHeight < 200) {
+            console.log(`⚠️ Image too small (${img.naturalWidth}x${img.naturalHeight}): ${src.substring(0, 60)}...`);
+            return;
+          }
+        }
+
         // Extract base URL without size parameters
         const baseUrl = src.split('?')[0].replace(/_(original|large|medium|small|thumb)\.(jpg|png|webp)/i, '');
-        uniqueUrls.add(baseUrl);
 
-        if (imageUrls.length < 5) {
-          imageUrls.push(src);
+        if (!uniqueUrls.has(baseUrl)) {
+          uniqueUrls.add(baseUrl);
+          validImages.push({ src, width: img.naturalWidth, height: img.naturalHeight });
         }
       }
     });
 
+    // Sort by image size (larger first) and take first 5
+    validImages.sort((a, b) => (b.width * b.height) - (a.width * a.height));
+    validImages.slice(0, 5).forEach(img => imageUrls.push(img.src));
+
     imageCount = uniqueUrls.size;
-    console.log(`✅ Found ${imageCount} unique product images in gallery`);
+    console.log(`✅ Found ${imageCount} unique product images in gallery (filtered)`);
   } else {
     // Fallback: try to count images globally
     console.log('⚠️ Gallery container not found, using fallback');
