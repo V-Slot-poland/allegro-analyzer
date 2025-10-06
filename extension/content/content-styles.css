@@ -1,0 +1,59 @@
+/* Allegro Analyzer - Content Script Styles */
+
+.allegro-analyzer-floating-btn {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  z-index: 999999;
+
+  /* Styling */
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  padding: 16px 28px;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+
+  /* Shadow and effects */
+  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  /* Prevent text selection */
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.allegro-analyzer-floating-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(102, 126, 234, 0.6);
+}
+
+.allegro-analyzer-floating-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 15px rgba(102, 126, 234, 0.4);
+}
+
+.allegro-analyzer-floating-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Animation on load */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(100px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.allegro-analyzer-floating-btn {
+  animation: slideInUp 0.5s ease-out;
+}

@@ -1,0 +1,34 @@
+{
+  "manifest_version": 3,
+  "name": "Allegro Analyzer",
+  "version": "1.0.0",
+  "description": "Narzędzie do analizy i optymalizacji aukcji Allegro z wykorzystaniem AI",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "scripting"
+  ],
+  "host_permissions": [
+    "*://allegro.pl/oferta/*"
+  ],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://allegro.pl/oferta/*"],
+      "js": ["content/content-script.js"],
+      "css": ["content/content-styles.css"]
+    }
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
