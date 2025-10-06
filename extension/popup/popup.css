@@ -115,6 +115,156 @@ body {
   font-weight: 500;
 }
 
+/* Utility classes */
+.hidden {
+  display: none !important;
+}
+
+/* Auction Card */
+.auction-card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  animation: fadeIn 0.3s ease-out;
+}
+
+.auction-header {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e1e8ed;
+}
+
+.auction-image {
+  flex-shrink: 0;
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f0f2f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.auction-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.auction-image:empty::before {
+  content: '📦';
+  font-size: 32px;
+}
+
+.auction-basic-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.auction-basic-info h3 {
+  color: #2c3e50;
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.auction-price {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.price-label {
+  color: #5a6c7d;
+  font-size: 13px;
+}
+
+.price-value {
+  color: #667eea;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+/* Auction Details */
+.auction-details {
+  margin-bottom: 16px;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f2f5;
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-label {
+  color: #5a6c7d;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.detail-value {
+  color: #2c3e50;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Auction Actions */
+.auction-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.action-button {
+  flex: 1;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.action-button.primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.action-button.primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.action-button.secondary {
+  background: #f0f2f5;
+  color: #5a6c7d;
+}
+
+.action-button.secondary:hover {
+  background: #e1e8ed;
+}
+
+.action-button:active {
+  transform: translateY(0);
+}
+
 /* Animations */
 @keyframes fadeIn {
   from {

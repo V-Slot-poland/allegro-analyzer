@@ -16,7 +16,8 @@
     </header>
 
     <main class="content">
-      <div class="message-box">
+      <!-- Initial message (hidden when data received) -->
+      <div id="initial-message" class="message-box">
         <div class="message-icon">📊</div>
         <h2>Gotowy do analizy!</h2>
         <p class="info-text">
@@ -29,6 +30,50 @@
             <li>Kliknij przycisk "🔍 Analizuj aukcję"</li>
             <li>Otrzymaj inteligentne sugestie AI</li>
           </ol>
+        </div>
+      </div>
+
+      <!-- Auction data card (shown when data received) -->
+      <div id="auction-card" class="auction-card hidden">
+        <div class="auction-header">
+          <div class="auction-image">
+            <img id="auction-thumbnail" src="" alt="Auction thumbnail">
+          </div>
+          <div class="auction-basic-info">
+            <h3 id="auction-title">Tytuł aukcji</h3>
+            <div class="auction-price">
+              <span class="price-label">Cena:</span>
+              <span id="auction-price" class="price-value">0 zł</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="auction-details">
+          <div class="detail-row">
+            <span class="detail-label">📸 Zdjęcia:</span>
+            <span id="auction-images" class="detail-value">0</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">📝 Opis:</span>
+            <span id="auction-description" class="detail-value">0 znaków</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">👤 Sprzedawca:</span>
+            <span id="auction-seller" class="detail-value">-</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">🏷️ Stan:</span>
+            <span id="auction-condition" class="detail-value">-</span>
+          </div>
+        </div>
+
+        <div class="auction-actions">
+          <button id="analyze-again-btn" class="action-button primary">
+            🔄 Analizuj ponownie
+          </button>
+          <button id="view-auction-btn" class="action-button secondary">
+            👁️ Zobacz aukcję
+          </button>
         </div>
       </div>
     </main>

@@ -281,6 +281,25 @@ const initialize = () => {
   }
 };
 
+// Listen for messages from popup
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === 'SCRAPE_AGAIN') {
+    console.log('📨 Received SCRAPE_AGAIN message from popup');
+
+    // Scrape and send data
+    const auctionData = scrapeCurrentListing();
+
+    console.log('📊 Scraped data:', auctionData);
+
+    chrome.runtime.sendMessage({
+      type: 'AUCTION_DATA',
+      data: auctionData
+    });
+
+    sendResponse({ success: true });
+  }
+});
+
 // Run on page load
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initialize);
