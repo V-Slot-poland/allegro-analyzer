@@ -211,16 +211,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         },
         body: JSON.stringify({
           model: 'gpt-5',
-          instructions: 'Jesteś ekspertem od optymalizacji aukcji Allegro. Analizujesz aukcje i podajesz konkretne, praktyczne sugestie poprawy sprzedaży. MUSISZ użyć web search aby znaleźć prawdziwe konkurencyjne aukcje na Allegro.pl i wyciągnąć z nich RZECZYWISTE dane (ceny, czas dostawy, liczbę zdjęć). ODPOWIEDŹ MUSI BYĆ W FORMACIE JSON.',
+          instructions: 'Jesteś ekspertem od optymalizacji aukcji Allegro. Analizujesz aukcje i podajesz konkretne, praktyczne sugestie poprawy sprzedaży. MUSISZ użyć web search aby znaleźć prawdziwe konkurencyjne aukcje na Allegro.pl i wyciągnąć z nich RZECZYWISTE dane (ceny, czas dostawy, liczbę zdjęć). BARDZO WAŻNE: Twoja odpowiedź MUSI być w formacie JSON zgodnym z schematem podanym w input.',
           input: prompt,
           tools: [
             {
               type: 'web_search'
             }
           ],
-          text: {
-            format: 'json_object'
-          },
           temperature: 0.7
         })
       });
