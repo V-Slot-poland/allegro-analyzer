@@ -210,7 +210,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           'Authorization': `Bearer ${apiKey}`
         },
         body: JSON.stringify({
-          model: 'gpt-5',
+          model: 'gpt-5-mini',
           instructions: 'Jesteś ekspertem od optymalizacji aukcji Allegro. Analizujesz aukcje i podajesz konkretne, praktyczne sugestie poprawy sprzedaży. MUSISZ użyć web search aby znaleźć prawdziwe konkurencyjne aukcje na Allegro.pl i wyciągnąć z nich RZECZYWISTE dane (ceny, czas dostawy, liczbę zdjęć). BARDZO WAŻNE: Twoja odpowiedź MUSI być w formacie JSON zgodnym z schematem podanym w input.',
           input: prompt,
           tools: [
@@ -219,7 +219,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
           ],
           reasoning: {
-            effort: 'high'
+            effort: 'medium'
           },
           text: {
             verbosity: 'medium'
@@ -234,16 +234,32 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       const data = await response.json();
 
-      // Parse response from new API format
+      // Parse response from Responses API format
       let analysisText;
-      if (data.output && typeof data.output === 'string') {
-        analysisText = data.output;
-      } else if (data.output && data.output.content) {
-        analysisText = data.output.content;
-      } else if (data.choices && data.choices[0]) {
-        analysisText = data.choices[0].message.content;
-      } else {
-        throw new Error('Nieoczekiwany format odpowiedzi API');
+
+      // GPT-5 Responses API returns output as array of items
+      if (data.output && Array.isArray(data.output)) {
+        // Find the message item with output_text
+        const messageItem = data.output.find(item => item.type === 'message');
+        if (messageItem && messageItem.content && Array.isArray(messageItem.content)) {
+          const textContent = messageItem.content.find(c => c.type === 'output_text');
+          if (textContent && textContent.text) {
+            analysisText = textContent.text;
+          }
+        }
+      }
+
+      // Fallback for other formats
+      if (!analysisText) {
+        if (data.output && typeof data.output === 'string') {
+          analysisText = data.output;
+        } else if (data.output_text) {
+          analysisText = data.output_text;
+        } else if (data.choices && data.choices[0]) {
+          analysisText = data.choices[0].message.content;
+        } else {
+          throw new Error('Nieoczekiwany format odpowiedzi API');
+        }
       }
 
       const analysis = JSON.parse(analysisText);
