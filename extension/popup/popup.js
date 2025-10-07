@@ -202,24 +202,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       const prompt = createAnalysisPrompt(auctionData);
 
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      // Using new Responses API with GPT-5 and web_search tool
+      const response = await fetch('https://api.openai.com/v1/responses', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${apiKey}`
         },
         body: JSON.stringify({
-          model: 'gpt-4o',
-          messages: [
-            {
-              role: 'system',
-              content: 'Jesteś ekspertem od optymalizacji aukcji Allegro. Analizujesz aukcje i podajesz konkretne, praktyczne sugestie poprawy sprzedaży.'
-            },
-            {
-              role: 'user',
-              content: prompt
-            }
-          ],
+          model: 'gpt-5',
+          instructions: 'Jesteś ekspertem od optymalizacji aukcji Allegro. Analizujesz aukcje i podajesz konkretne, praktyczne sugestie poprawy sprzedaży. MUSISZ użyć web search aby znaleźć prawdziwe konkurencyjne aukcje na Allegro.pl i wyciągnąć z nich RZECZYWISTE dane (ceny, czas dostawy, liczbę zdjęć).',
+          input: prompt,
+          tools: ['web_search'],
           response_format: { type: 'json_object' },
           temperature: 0.7
         })
@@ -231,7 +225,20 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       const data = await response.json();
-      const analysis = JSON.parse(data.choices[0].message.content);
+
+      // Parse response from new API format
+      let analysisText;
+      if (data.output && typeof data.output === 'string') {
+        analysisText = data.output;
+      } else if (data.output && data.output.content) {
+        analysisText = data.output.content;
+      } else if (data.choices && data.choices[0]) {
+        analysisText = data.choices[0].message.content;
+      } else {
+        throw new Error('Nieoczekiwany format odpowiedzi API');
+      }
+
+      const analysis = JSON.parse(analysisText);
 
       currentAIAnalysis = analysis;
       displayAIResults(analysis);
@@ -245,9 +252,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function createAnalysisPrompt(auctionData) {
-    return `Przeanalizuj następującą aukcję Allegro i porównaj z konkurencją:
+    return `WAŻNE: Użyj funkcji web_search aby znaleźć PRAWDZIWE konkurencyjne aukcje!
 
-TWOJA AUKCJA:
+TWOJA AUKCJA DO ANALIZY:
 URL: ${auctionData.url}
 Tytuł: ${auctionData.title}
 Cena: ${auctionData.price}
@@ -256,46 +263,54 @@ Długość opisu: ${auctionData.descriptionLength} znaków
 Sprzedawca: ${auctionData.seller}
 Stan: ${auctionData.condition}
 
-ZADANIE:
-1. Wyszukaj w internecie 3-5 konkurencyjnych aukcji tego samego produktu na Allegro.pl
-2. Szczegółowo porównaj: ceny, czas dostawy, koszt wysyłki, jakość opisów (długość, formatowanie), liczbę zdjęć
-3. Oceń bieżącą aukcję w skali 0-5 gwiazdek
-4. Wyciągnij KONKRETNE DANE z konkurencyjnych aukcji (nie zgaduj!)
-5. Wymień kluczowe przewagi konkurencji
-6. Zaproponuj poprawki
+KROK 1 - WYSZUKIWANIE (UŻYJ WEB SEARCH!):
+Wyszukaj na Allegro.pl: "${auctionData.title}"
+Znajdź 3-5 konkurencyjnych aukcji od różnych sprzedawców
+Otwórz każdą aukcję i wyciągnij PRAWDZIWE dane
 
-BARDZO WAŻNE - DANE MUSZĄ BYĆ PRAWDZIWE:
-- Podaj RZECZYWISTY czas dostawy (np. "2-3 dni", "24h", "do 5 dni") z aukcji
-- Podaj RZECZYWISTY koszt dostawy (np. "Darmowa", "14,99 zł", "19,99 zł")
-- Oceń jakość opisu liczbowo: 1-10 (1=bardzo słaby, 10=profesjonalny)
-- Zlicz PRAWDZIWĄ liczbę zdjęć produktu
+KROK 2 - ZBIERANIE DANYCH z każdej konkurencyjnej aukcji:
+- Cena (dokładna kwota w PLN)
+- Czas dostawy (np. "24h", "2-3 dni", "do 5 dni") - znajdź na stronie!
+- Koszt wysyłki (np. "Darmowa", "14,99 zł") - sprawdź opcje dostawy!
+- Jakość opisu: oceń 1-10 (czy ma HTML, emoji, formatowanie, parametry)
+- Liczba zdjęć: policz ile jest zdjęć produktu w galerii
 
-ODPOWIEDŹ W FORMACIE JSON:
+KROK 3 - PORÓWNANIE:
+Wybierz najlepszą konkurencyjną aukcję (najlepsza cena + czas dostawy)
+Porównaj z twoją aukcją
+Oceń twoją aukcję w skali 0-5 gwiazdek
+
+KROK 4 - SUGESTIE:
+Wymień konkretne przewagi konkurencji
+Zaproponuj co poprawić w opisie (z emoji, HTML dla Allegro)
+
+ODPOWIEDŹ MUSI BYĆ W FORMACIE JSON:
 {
   "rating": 4.5,
   "yourAuction": {
-    "price": 247.99,
-    "deliveryTime": "3-5 dni",
-    "shippingCost": "Darmowa",
-    "descriptionQuality": 7,
-    "photosCount": 8
+    "price": ${auctionData.priceAmount || 'null'},
+    "deliveryTime": "sprawdź na stronie lub 'Brak danych'",
+    "shippingCost": "sprawdź na stronie lub 'Brak danych'",
+    "descriptionQuality": ${Math.min(Math.max(Math.floor(auctionData.descriptionLength / 500), 1), 10)},
+    "photosCount": ${auctionData.imageCount}
   },
   "bestCompetitor": {
-    "url": "https://allegro.pl/...",
-    "price": 239.99,
-    "deliveryTime": "24h",
-    "shippingCost": "Darmowa",
-    "descriptionQuality": 9,
-    "photosCount": 15
+    "url": "https://allegro.pl/oferta/...",
+    "price": 0.00,
+    "deliveryTime": "RZECZYWISTY z aukcji",
+    "shippingCost": "RZECZYWISTY z aukcji",
+    "descriptionQuality": 0,
+    "photosCount": 0
   },
   "advantages": [
-    "Krótszy czas dostawy (24h vs 3-5 dni)",
-    "Więcej zdjęć produktu (15 vs 8)",
-    "Lepiej opisane parametry techniczne"
+    "Konkretna przewaga 1",
+    "Konkretna przewaga 2"
   ],
-  "suggestions": "Szczegółowe sugestie optymalizacji aukcji...",
-  "improvedDescription": "<div>Poprawiony opis HTML dla Allegro z emoji...</div>"
-}`;
+  "suggestions": "Szczegółowe sugestie...",
+  "improvedDescription": "<div style='font-family: Arial;'><h2>📦 Tytuł z emoji</h2><p>Opis...</p></div>"
+}
+
+UWAGA: Jeśli nie możesz znaleźć danych - wpisz "Brak danych" zamiast zgadywać!`;
   }
 
   function displayAIResults(analysis) {
