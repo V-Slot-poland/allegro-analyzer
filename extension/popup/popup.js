@@ -245,8 +245,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function createAnalysisPrompt(auctionData) {
-    return `Przeanalizuj następującą aukcję Allegro i znajdź konkurencję:
+    return `Przeanalizuj następującą aukcję Allegro i porównaj z konkurencją:
 
+TWOJA AUKCJA:
 URL: ${auctionData.url}
 Tytuł: ${auctionData.title}
 Cena: ${auctionData.price}
@@ -257,28 +258,43 @@ Stan: ${auctionData.condition}
 
 ZADANIE:
 1. Wyszukaj w internecie 3-5 konkurencyjnych aukcji tego samego produktu na Allegro.pl
-2. Porównaj ceny, jakość opisów, zdjęcia, warunki dostawy
+2. Szczegółowo porównaj: ceny, czas dostawy, koszt wysyłki, jakość opisów (długość, formatowanie), liczbę zdjęć
 3. Oceń bieżącą aukcję w skali 0-5 gwiazdek
-4. Znajdź aukcję z najlepszą ceną
-5. Wymień przewagi konkurencji
-6. Zaproponuj konkretne poprawki
+4. Wyciągnij KONKRETNE DANE z konkurencyjnych aukcji (nie zgaduj!)
+5. Wymień kluczowe przewagi konkurencji
+6. Zaproponuj poprawki
+
+BARDZO WAŻNE - DANE MUSZĄ BYĆ PRAWDZIWE:
+- Podaj RZECZYWISTY czas dostawy (np. "2-3 dni", "24h", "do 5 dni") z aukcji
+- Podaj RZECZYWISTY koszt dostawy (np. "Darmowa", "14,99 zł", "19,99 zł")
+- Oceń jakość opisu liczbowo: 1-10 (1=bardzo słaby, 10=profesjonalny)
+- Zlicz PRAWDZIWĄ liczbę zdjęć produktu
 
 ODPOWIEDŹ W FORMACIE JSON:
 {
   "rating": 4.5,
+  "yourAuction": {
+    "price": 247.99,
+    "deliveryTime": "3-5 dni",
+    "shippingCost": "Darmowa",
+    "descriptionQuality": 7,
+    "photosCount": 8
+  },
   "bestCompetitor": {
     "url": "https://allegro.pl/...",
     "price": 239.99,
-    "priceDiff": -3.2,
-    "priceFormatted": "239,99 zł"
+    "deliveryTime": "24h",
+    "shippingCost": "Darmowa",
+    "descriptionQuality": 9,
+    "photosCount": 15
   },
   "advantages": [
-    "Darmowa dostawa",
-    "Czas wysyłki: 24h",
-    "150+ zdjęć produktu"
+    "Krótszy czas dostawy (24h vs 3-5 dni)",
+    "Więcej zdjęć produktu (15 vs 8)",
+    "Lepiej opisane parametry techniczne"
   ],
   "suggestions": "Szczegółowe sugestie optymalizacji aukcji...",
-  "improvedDescription": "<div>Poprawiony opis HTML dla Allegro...</div>"
+  "improvedDescription": "<div>Poprawiony opis HTML dla Allegro z emoji...</div>"
 }`;
   }
 
@@ -291,17 +307,53 @@ ODPOWIEDŹ W FORMACIE JSON:
     document.getElementById('ai-stars').textContent = stars;
     document.getElementById('ai-rating-value').textContent = `${analysis.rating}/5`;
 
-    // Display best competitor
-    if (analysis.bestCompetitor) {
-      document.getElementById('ai-best-price').textContent = analysis.bestCompetitor.priceFormatted;
+    // Helper function to determine indicator
+    function getIndicator(yourValue, bestValue, lowerIsBetter = false) {
+      if (yourValue === bestValue || yourValue == bestValue) return '➖';
 
-      const diffElement = document.getElementById('ai-price-diff');
-      const diff = analysis.bestCompetitor.priceDiff;
-      diffElement.textContent = `${diff > 0 ? '+' : ''}${diff.toFixed(1)}%`;
-      diffElement.className = `comparison-value price-diff ${diff > 0 ? 'positive' : 'negative'}`;
+      const isBetter = lowerIsBetter
+        ? parseFloat(yourValue) <= parseFloat(bestValue)
+        : parseFloat(yourValue) >= parseFloat(bestValue);
 
+      return isBetter ? '✅' : '⚠️';
+    }
+
+    // Display detailed comparisons
+    if (analysis.yourAuction && analysis.bestCompetitor) {
+      const yours = analysis.yourAuction;
+      const best = analysis.bestCompetitor;
+
+      // Price comparison
+      document.getElementById('comp-your-price').textContent = `${yours.price} zł`;
+      document.getElementById('comp-best-price').textContent = `${best.price} zł`;
+      document.getElementById('comp-price-indicator').textContent =
+        getIndicator(yours.price, best.price, true);
+
+      // Delivery time
+      document.getElementById('comp-your-delivery').textContent = yours.deliveryTime || 'Brak danych';
+      document.getElementById('comp-best-delivery').textContent = best.deliveryTime || 'Brak danych';
+      document.getElementById('comp-delivery-indicator').textContent = '📊';
+
+      // Description quality
+      document.getElementById('comp-your-desc').textContent = `${yours.descriptionQuality}/10`;
+      document.getElementById('comp-best-desc').textContent = `${best.descriptionQuality}/10`;
+      document.getElementById('comp-desc-indicator').textContent =
+        getIndicator(yours.descriptionQuality, best.descriptionQuality);
+
+      // Photos count
+      document.getElementById('comp-your-photos').textContent = `${yours.photosCount} zdjęć`;
+      document.getElementById('comp-best-photos').textContent = `${best.photosCount} zdjęć`;
+      document.getElementById('comp-photos-indicator').textContent =
+        getIndicator(yours.photosCount, best.photosCount);
+
+      // Shipping cost
+      document.getElementById('comp-your-shipping').textContent = yours.shippingCost || 'Brak danych';
+      document.getElementById('comp-best-shipping').textContent = best.shippingCost || 'Brak danych';
+      document.getElementById('comp-shipping-indicator').textContent = '📊';
+
+      // Best competitor link
       const linkElement = document.getElementById('ai-best-link');
-      linkElement.href = analysis.bestCompetitor.url;
+      linkElement.href = best.url;
     }
 
     // Display advantages

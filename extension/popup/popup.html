@@ -127,23 +127,90 @@
               <span class="rating-value" id="ai-rating-value">0/5</span>
             </div>
 
-            <div class="ai-comparison">
-              <div class="comparison-item">
-                <span class="comparison-label">💰 Najlepsza cena:</span>
-                <span class="comparison-value" id="ai-best-price">-</span>
+            <!-- Detailed Comparison Table -->
+            <div class="comparison-table">
+              <h4>📊 Szczegółowe porównanie</h4>
+
+              <!-- Price Comparison -->
+              <div class="comparison-row">
+                <div class="comparison-category">💰 Cena</div>
+                <div class="comparison-yours">
+                  <span class="label">Twoja:</span>
+                  <span class="value" id="comp-your-price">-</span>
+                </div>
+                <div class="comparison-best">
+                  <span class="label">Najniższa:</span>
+                  <span class="value" id="comp-best-price">-</span>
+                  <span class="indicator" id="comp-price-indicator"></span>
+                </div>
               </div>
-              <div class="comparison-item">
-                <span class="comparison-label">📊 Różnica:</span>
-                <span class="comparison-value price-diff" id="ai-price-diff">-</span>
+
+              <!-- Delivery Time -->
+              <div class="comparison-row">
+                <div class="comparison-category">🚚 Czas dostawy</div>
+                <div class="comparison-yours">
+                  <span class="label">Twój:</span>
+                  <span class="value" id="comp-your-delivery">-</span>
+                </div>
+                <div class="comparison-best">
+                  <span class="label">Najkrótszy:</span>
+                  <span class="value" id="comp-best-delivery">-</span>
+                  <span class="indicator" id="comp-delivery-indicator"></span>
+                </div>
               </div>
-              <div class="comparison-item">
-                <span class="comparison-label">🔗 Link:</span>
-                <a href="#" id="ai-best-link" class="comparison-link" target="_blank">Zobacz aukcję →</a>
+
+              <!-- Description Quality -->
+              <div class="comparison-row">
+                <div class="comparison-category">📝 Jakość opisu</div>
+                <div class="comparison-yours">
+                  <span class="label">Twoja:</span>
+                  <span class="value" id="comp-your-desc">-</span>
+                </div>
+                <div class="comparison-best">
+                  <span class="label">Najlepsza:</span>
+                  <span class="value" id="comp-best-desc">-</span>
+                  <span class="indicator" id="comp-desc-indicator"></span>
+                </div>
+              </div>
+
+              <!-- Photos Count -->
+              <div class="comparison-row">
+                <div class="comparison-category">📸 Liczba zdjęć</div>
+                <div class="comparison-yours">
+                  <span class="label">Twoja:</span>
+                  <span class="value" id="comp-your-photos">-</span>
+                </div>
+                <div class="comparison-best">
+                  <span class="label">Najwięcej:</span>
+                  <span class="value" id="comp-best-photos">-</span>
+                  <span class="indicator" id="comp-photos-indicator"></span>
+                </div>
+              </div>
+
+              <!-- Shipping Cost -->
+              <div class="comparison-row">
+                <div class="comparison-category">📦 Koszt dostawy</div>
+                <div class="comparison-yours">
+                  <span class="label">Twój:</span>
+                  <span class="value" id="comp-your-shipping">-</span>
+                </div>
+                <div class="comparison-best">
+                  <span class="label">Najniższy:</span>
+                  <span class="value" id="comp-best-shipping">-</span>
+                  <span class="indicator" id="comp-shipping-indicator"></span>
+                </div>
+              </div>
+
+              <!-- Best Competitor Link -->
+              <div class="comparison-footer">
+                <a href="#" id="ai-best-link" class="comparison-link" target="_blank">
+                  🔗 Zobacz najlepszą aukcję konkurencji →
+                </a>
               </div>
             </div>
 
             <div class="ai-advantages">
-              <h4>✅ Przewagi konkurencji:</h4>
+              <h4>✅ Kluczowe przewagi konkurencji:</h4>
               <ul id="ai-advantages-list"></ul>
             </div>
 

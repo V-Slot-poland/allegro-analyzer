@@ -501,54 +501,120 @@ body {
   color: #2c3e50;
 }
 
-.ai-comparison {
-  background: #f8f9fa;
-  padding: 16px;
-  border-radius: 8px;
+/* Detailed Comparison Table */
+.comparison-table {
+  background: white;
+  border: 2px solid #e1e8ed;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.comparison-table h4 {
+  font-size: 15px;
+  color: #2c3e50;
   margin-bottom: 16px;
+  font-weight: 600;
+  text-align: center;
 }
 
-.comparison-item {
-  display: flex;
-  justify-content: space-between;
+.comparison-row {
+  display: grid;
+  grid-template-columns: 100px 1fr 1fr;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f2f5;
   align-items: center;
-  padding: 8px 0;
-  border-bottom: 1px solid #e1e8ed;
 }
 
-.comparison-item:last-child {
+.comparison-row:last-of-type {
   border-bottom: none;
 }
 
-.comparison-label {
-  font-size: 13px;
-  color: #5a6c7d;
-  font-weight: 500;
+.comparison-category {
+  font-size: 12px;
+  font-weight: 600;
+  color: #2c3e50;
 }
 
-.comparison-value {
+.comparison-yours,
+.comparison-best {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.comparison-yours .label,
+.comparison-best .label {
+  font-size: 10px;
+  color: #95a5a6;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.comparison-yours .value,
+.comparison-best .value {
   font-size: 13px;
   color: #2c3e50;
-  font-weight: 600;
+  font-weight: 700;
 }
 
-.price-diff.positive {
-  color: #e74c3c;
+.comparison-yours {
+  background: #f8f9fa;
+  padding: 8px;
+  border-radius: 6px;
 }
 
-.price-diff.negative {
-  color: #27ae60;
+.comparison-best {
+  background: #e8f5e9;
+  padding: 8px;
+  border-radius: 6px;
+  position: relative;
+}
+
+.indicator {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  font-size: 16px;
+}
+
+.indicator.better {
+  content: '✅';
+}
+
+.indicator.worse {
+  content: '⚠️';
+}
+
+.indicator.same {
+  content: '➖';
+}
+
+.comparison-footer {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 2px solid #e1e8ed;
+  text-align: center;
 }
 
 .comparison-link {
   color: #667eea;
   text-decoration: none;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
+  display: inline-block;
+  padding: 10px 16px;
+  background: #f0f2f5;
+  border-radius: 8px;
+  transition: all 0.2s ease;
 }
 
 .comparison-link:hover {
-  text-decoration: underline;
+  background: #667eea;
+  color: white;
+  transform: translateY(-1px);
 }
 
 .ai-advantages {
