@@ -13,7 +13,40 @@
         <span class="icon">🔍</span>
         <h1>Allegro Analyzer</h1>
       </div>
+      <button id="settings-btn" class="settings-btn" title="Ustawienia">⚙️</button>
     </header>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>⚙️ Ustawienia</h2>
+          <button id="close-settings-btn" class="close-btn">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="setting-group">
+            <label for="api-key-input">🔑 OpenAI API Key</label>
+            <input
+              type="password"
+              id="api-key-input"
+              placeholder="sk-proj-..."
+              class="api-key-input"
+            />
+            <small class="help-text">
+              <a href="https://platform.openai.com/api-keys" target="_blank">
+                Pobierz klucz API z OpenAI →
+              </a>
+            </small>
+          </div>
+          <div class="setting-group">
+            <button id="save-settings-btn" class="action-button primary">
+              💾 Zapisz ustawienia
+            </button>
+          </div>
+          <div id="settings-status" class="status-message hidden"></div>
+        </div>
+      </div>
+    </div>
 
     <main class="content">
       <!-- Initial message (hidden when data received) -->
@@ -74,6 +107,80 @@
           <button id="view-auction-btn" class="action-button secondary">
             👁️ Zobacz aukcję
           </button>
+        </div>
+
+        <!-- AI Analysis Section -->
+        <div class="ai-section">
+          <div class="ai-header">
+            <h3>🤖 Analiza AI</h3>
+            <button id="ai-analyze-btn" class="action-button ai-button">
+              <span class="btn-text">Analizuj konkurencję</span>
+              <span class="btn-cost">~0.05 PLN</span>
+            </button>
+          </div>
+
+          <!-- AI Results (hidden by default) -->
+          <div id="ai-results" class="ai-results hidden">
+            <div class="ai-rating">
+              <span class="rating-label">Ocena aukcji:</span>
+              <div class="stars" id="ai-stars">☆☆☆☆☆</div>
+              <span class="rating-value" id="ai-rating-value">0/5</span>
+            </div>
+
+            <div class="ai-comparison">
+              <div class="comparison-item">
+                <span class="comparison-label">💰 Najlepsza cena:</span>
+                <span class="comparison-value" id="ai-best-price">-</span>
+              </div>
+              <div class="comparison-item">
+                <span class="comparison-label">📊 Różnica:</span>
+                <span class="comparison-value price-diff" id="ai-price-diff">-</span>
+              </div>
+              <div class="comparison-item">
+                <span class="comparison-label">🔗 Link:</span>
+                <a href="#" id="ai-best-link" class="comparison-link" target="_blank">Zobacz aukcję →</a>
+              </div>
+            </div>
+
+            <div class="ai-advantages">
+              <h4>✅ Przewagi konkurencji:</h4>
+              <ul id="ai-advantages-list"></ul>
+            </div>
+
+            <details class="ai-suggestions">
+              <summary>📝 Pełne sugestie optymalizacji</summary>
+              <div id="ai-suggestions-content" class="suggestions-content"></div>
+              <button id="copy-suggestions-btn" class="action-button secondary small">
+                📋 Kopiuj sugestie
+              </button>
+            </details>
+
+            <details class="ai-description">
+              <summary>✨ Poprawiony opis (gotowy do Allegro)</summary>
+              <div id="ai-description-content" class="description-content"></div>
+              <button id="copy-description-btn" class="action-button secondary small">
+                📋 Kopiuj opis HTML
+              </button>
+            </details>
+
+            <div class="ai-actions">
+              <button id="export-pdf-btn" class="action-button secondary">
+                📄 Eksportuj raport PDF
+              </button>
+            </div>
+          </div>
+
+          <!-- AI Loading State -->
+          <div id="ai-loading" class="ai-loading hidden">
+            <div class="spinner"></div>
+            <p>Analizuję konkurencję za pomocą AI...</p>
+            <small>To może potrwać 10-30 sekund</small>
+          </div>
+
+          <!-- AI Error State -->
+          <div id="ai-error" class="ai-error hidden">
+            <p class="error-message"></p>
+          </div>
         </div>
       </div>
     </main>

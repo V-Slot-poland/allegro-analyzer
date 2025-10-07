@@ -9,7 +9,8 @@
     "scripting"
   ],
   "host_permissions": [
-    "*://allegro.pl/oferta/*"
+    "*://allegro.pl/oferta/*",
+    "https://api.openai.com/*"
   ],
   "action": {
     "default_popup": "popup/popup.html",
