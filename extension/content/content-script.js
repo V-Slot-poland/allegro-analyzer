@@ -74,29 +74,26 @@ const scrapeCurrentListing = () => {
   let imageCount = 0;
   const imageUrls = [];
 
-  // PRIORITY: Get main/active image first (the big one currently displayed)
-  const mainImageSelectors = [
-    'div[data-box-name="gallery"] img[aria-hidden="false"]', // Active slide
-    'div[data-box-name="gallery"] div[aria-label*="Slajd 1"] img', // First slide
-    'div[data-box-name="gallery"] li[aria-label*="Slajd 1"] img',
-    'img[data-role="photo-main"]',
-    'div.gallery-preview img:first-of-type'
-  ];
+  // PRIORITY 1: Get from Open Graph meta tag (most reliable!)
+  const ogImage = document.querySelector('meta[property="og:image"]');
+  if (ogImage) {
+    const src = ogImage.getAttribute('content');
+    if (src && src.includes('allegroimg.com') && !src.includes('logo')) {
+      imageUrls.push(src);
+      console.log(`✅ Found MAIN image from OG meta tag`);
+      console.log(`   URL: ${src.substring(0, 80)}...`);
+    }
+  }
 
-  let mainImage = null;
-  for (const selector of mainImageSelectors) {
-    mainImage = document.querySelector(selector);
-    if (mainImage && mainImage.src && mainImage.src.includes('allegroimg.com')) {
-      const src = mainImage.src;
-      const alt = mainImage.alt || '';
-
-      // Validate it's a product image (not logo)
-      if (alt.length > 10 && !src.includes('logo')) {
+  // PRIORITY 2: Get from preload link (backup)
+  if (imageUrls.length === 0) {
+    const preloadImage = document.querySelector('link[rel="preload"][as="image"][fetchpriority="high"]');
+    if (preloadImage) {
+      const src = preloadImage.getAttribute('href');
+      if (src && src.includes('allegroimg.com') && !src.includes('logo')) {
         imageUrls.push(src);
-        console.log(`✅ Found MAIN image with selector: ${selector}`);
+        console.log(`✅ Found MAIN image from preload link`);
         console.log(`   URL: ${src.substring(0, 80)}...`);
-        console.log(`   Alt: ${alt.substring(0, 60)}...`);
-        break;
       }
     }
   }
@@ -252,33 +249,39 @@ const scrapeCurrentListing = () => {
     }
   }
 
-  // Get seller info - try to extract just the name
-  let seller = trySelectors([
-    '[data-box-name="Seller"] a',
-    'div.mpof_ki_seller a',
-    'a[data-role="seller-link"]',
-    'div.seller-info a',
-    'a[href*="/uzytkownik/"]',
-    'div[data-box-name="seller info"] a',
-    'section[aria-label*="Sprzedawca"] a'
-  ]);
+  // Get seller info - PRIORITY: Extract from URL (most reliable)
+  let seller = null;
 
-  // Clean seller name - remove "Inne przedmioty..." text
-  if (seller) {
-    // Try to extract from URL if text is too long
-    if (seller.length > 50 || seller.includes('Inne przedmioty')) {
-      const sellerLink = document.querySelector('a[href*="/uzytkownik/"]');
-      if (sellerLink) {
-        const match = sellerLink.href.match(/\/uzytkownik\/([^/?]+)/);
-        if (match) {
-          seller = decodeURIComponent(match[1].replace(/_/g, ' '));
-          console.log(`✅ Extracted seller from URL: ${seller}`);
-        }
+  // PRIORITY 1: Extract seller name from URL path
+  const sellerLink = document.querySelector('a[href*="/uzytkownik/"]');
+  if (sellerLink) {
+    const match = sellerLink.href.match(/\/uzytkownik\/([^/?]+)/);
+    if (match) {
+      seller = decodeURIComponent(match[1].replace(/_/g, ' '));
+      console.log(`✅ Extracted seller from URL: ${seller}`);
+    }
+  }
+
+  // FALLBACK: Try to get from link text (if URL extraction failed)
+  if (!seller) {
+    seller = trySelectors([
+      '[data-box-name="Seller"] a',
+      'div.mpof_ki_seller a',
+      'a[data-role="seller-link"]',
+      'div.seller-info a',
+      'a[href*="/uzytkownik/"]',
+      'div[data-box-name="seller info"] a',
+      'section[aria-label*="Sprzedawca"] a'
+    ]);
+
+    // Remove common text patterns
+    if (seller) {
+      seller = seller.replace(/^(od|from)\s+/i, '').trim();
+      // Remove "Sklep sprzedawcy" and similar
+      if (seller === 'Sklep sprzedawcy' || seller.includes('Inne przedmioty')) {
+        seller = null;
       }
     }
-
-    // Remove common prefixes
-    seller = seller.replace(/^(od|from)\s+/i, '').trim();
   }
 
   // Get condition (nowy/używany)
