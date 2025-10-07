@@ -217,8 +217,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             {
               type: 'web_search'
             }
-          ],
-          temperature: 0.7
+          ]
         })
       });
 
