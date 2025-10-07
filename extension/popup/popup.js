@@ -217,7 +217,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             {
               type: 'web_search'
             }
-          ]
+          ],
+          reasoning: {
+            effort: 'high'
+          },
+          text: {
+            verbosity: 'medium'
+          }
         })
       });
 
